@@ -1,0 +1,48 @@
+Default ( Working )
+
+ffmpeg -i GH010549.MP4 -filter_complex "[0:v]split=3[v1][v2][v3]; [v1]scale=640:480[v480p]; [v2]scale=1280:720[v720p]; [v3]scale=1920:1080[v1080p]" -map "[v480p]" -map 0:a -c:v:0 libx264 -b:v:0 1000k -preset fast -g 48 -sc_threshold 0 -c:a aac -b:a 128k -f hls -hls_time 6 -hls_playlist_type vod -hls_segment_filename "480p_%03d.ts" 480p.m3u8 -map "[v720p]" -map 0:a -c:v:1 libx264 -b:v:1 2500k -preset fast -g 48 -sc_threshold 0 -c:a aac -b:a 128k -f hls -hls_time 6 -hls_playlist_type vod -hls_segment_filename "720p_%03d.ts" 720p.m3u8 -map "[v1080p]" -map 0:a -c:v:2 libx264 -b:v:2 5000k -preset fast -g 48 -sc_threshold 0 -c:a aac -b:a 128k -f hls -hls_time 6 -hls_playlist_type vod -hls_segment_filename "1080p_%03d.ts" 1080p.m3u8 -ss 00:00:00 -frames:v 1 -q:v 2 thumbnail.jpg
+
+All Resolutions
+
+ffmpeg -i GH010549.MP4 -filter_complex "[0:v]split=7[v144p][v240p][v360p][v480p][v720p][v1080p][v4k]; [v144p]scale=256:144[v144p_out]; [v240p]scale=426:240[v240p_out]; [v360p]scale=640:360[v360p_out]; [v480p]scale=854:480[v480p_out]; [v720p]scale=1280:720[v720p_out]; [v1080p]scale=1920:1080[v1080p_out]; [v4k]scale=3840:2160[v4k_out]" -map "[v144p_out]" -map 0:a -c:v:0 libx264 -b:v:0 300k -preset fast -g 48 -sc_threshold 0 -c:a aac -b:a 64k -f hls -hls_time 6 -hls_playlist_type vod -hls_segment_filename "144p_%03d.ts" 144p.m3u8 -map "[v240p_out]" -map 0:a -c:v:1 libx264 -b:v:1 500k -preset fast -g 48 -sc_threshold 0 -c:a aac -b:a 64k -f hls -hls_time 6 -hls_playlist_type vod -hls_segment_filename "240p_%03d.ts" 240p.m3u8 -map "[v360p_out]" -map 0:a -c:v:2 libx264 -b:v:2 800k -preset fast -g 48 -sc_threshold 0 -c:a aac -b:a 96k -f hls -hls_time 6 -hls_playlist_type vod -hls_segment_filename "360p_%03d.ts" 360p.m3u8 -map "[v480p_out]" -map 0:a -c:v:3 libx264 -b:v:3 1000k -preset fast -g 48 -sc_threshold 0 -c:a aac -b:a 128k -f hls -hls_time 6 -hls_playlist_type vod -hls_segment_filename "480p_%03d.ts" 480p.m3u8 -map "[v720p_out]" -map 0:a -c:v:4 libx264 -b:v:4 2500k -preset fast -g 48 -sc_threshold 0 -c:a aac -b:a 128k -f hls -hls_time 6 -hls_playlist_type vod -hls_segment_filename "720p_%03d.ts" 720p.m3u8 -map "[v1080p_out]" -map 0:a -c:v:5 libx264 -b:v:5 5000k -preset fast -g 48 -sc_threshold 0 -c:a aac -b:a 128k -f hls -hls_time 6 -hls_playlist_type vod -hls_segment_filename "1080p_%03d.ts" 1080p.m3u8 -map "[v4k_out]" -map 0:a -c:v:6 libx264 -b:v:6 10000k -preset fast -g 48 -sc_threshold 0 -c:a aac -b:a 128k -f hls -hls_time 6 -hls_playlist_type vod -hls_segment_filename "4k_%03d.ts" 4k.m3u8 -ss 00:00:00 -frames:v 1 -q:v 2 thumbnail.jpg
+
+
+
+AMD GPU Test
+
+ffmpeg -init_hw_device opencl=ocl -filter_hw_device ocl -i GH010549.MP4 -filter_complex "[0:v]split=3[v1][v2][v3];[v1]hwupload,scale_opencl=w=640:h=480,hwdownload[v480p]; [v2]hwupload,scale_opencl=w=1280:h=720,hwdownload[v720p]; [v3]hwupload,scale_opencl=w=1920:h=1080,hwdownload[v1080p]" -map "[v480p]" -map 0:a -c:v:0 libx264 -b:v:0 1000k -g 48 -sc_threshold 0 -c:a aac -b:a 128k -f hls -hls_time 6 -hls_playlist_type vod -hls_segment_filename "480p_%03d.ts" 480p.m3u8 -map "[v720p]" -map 0:a -c:v:1 libx264 -b:v:1 2500k -g 48 -sc_threshold 0 -c:a aac -b:a 128k -f hls -hls_time 6 -hls_playlist_type vod -hls_segment_filename "720p_%03d.ts" 720p.m3u8 -map "[v1080p]" -map 0:a -c:v:2 libx264 -b:v:2 5000k -g 48 -sc_threshold 0 -c:a aac -b:a 128k -f hls -hls_time 6 -hls_playlist_type vod -hls_segment_filename "1080p_%03d.ts" 1080p.m3u8 -ss 00:00:00 -frames:v 1 -q:v 2 thumbnail.jpg
+
+
+Try VAAPI (Linux)
+
+
+ffmpeg -hwaccel vaapi -vaapi_device /dev/dri/renderD128 -i GH010549.MP4 -filter_complex "[0:v]split=3[v1][v2][v3]; [v1]scale_vaapi=w=640:h=480[v480p]; [v2]scale_vaapi=w=1280:h=720[v720p]; [v3]scale_vaapi=w=1920:h=1080[v1080p]" -map "[v480p]" -map 0:a -c:v:0 h264_vaapi -b:v:0 1000k -g 48 -sc_threshold 0 -c:a aac -b:a 128k -f hls -hls_time 6 -hls_playlist_type vod -hls_segment_filename "480p_%03d.ts" 480p.m3u8 -map "[v720p]" -map 0:a -c:v:1 h264_vaapi -b:v:1 2500k -g 48 -sc_threshold 0 -c:a aac -b:a 128k -f hls -hls_time 6 -hls_playlist_type vod -hls_segment_filename "720p_%03d.ts" 720p.m3u8 -map "[v1080p]" -map 0:a -c:v:2 h264_vaapi -b:v:2 5000k -g 48 -sc_threshold 0 -c:a aac -b:a 128k -f hls -hls_time 6 -hls_playlist_type vod -hls_segment_filename "1080p_%03d.ts" 1080p.m3u8 -ss 00:00:00 -frames:v 1 -q:v 2 thumbnail.jpg
+
+
+
+
+
+
+Dash Optimization
+
+ffmpeg -i input.mp4 -filter_complex "[0:v]split=6[v1][v2][v3][v4][v5][v6]; [v1]scale=256:144[v144p]; [v2]scale=426:240[v240p]; [v3]scale=854:480[v480p]; [v4]scale=1280:720[v720p]; [v5]scale=1920:1080[v1080p]; [v6]scale=3840:2160[v4k]" -map "[v144p]" -map 0:a -c:v:0 libx264 -b:v:0 300k -preset fast -g 120 -sc_threshold 0 -c:a aac -b:a 64k -ac 2 -map "[v240p]" -map 0:a -c:v:1 libx264 -b:v:1 500k -preset fast -g 120 -sc_threshold 0 -c:a aac -b:a 64k -ac 2 -map "[v480p]" -map 0:a -c:v:2 libx264 -b:v:2 1000k -preset fast -g 120 -sc_threshold 0 -c:a aac -b:a 128k -ac 2 -map "[v720p]" -map 0:a -c:v:3 libx264 -b:v:3 2500k -preset fast -g 120 -sc_threshold 0 -c:a aac -b:a 128k -ac 2 -map "[v1080p]" -map 0:a -c:v:4 libx264 -b:v:4 5000k -preset fast -g 120 -sc_threshold 0 -c:a aac -b:a 128k -ac 2 -map "[v4k]" -map 0:a -c:v:5 libx264 -b:v:5 8000k -preset fast -g 120 -sc_threshold 0 -c:a aac -b:a 128k -ac 2 -f dash -seg_duration 10 -window_size 5 -extra_window_size 5 -use_template 1 -use_timeline 1 -adaptation_sets "id=0,streams=v id=1,streams=a" -init_seg_name "init_%03d_$RepresentationID$.m4s" -media_seg_name "chunk_%03d_$RepresentationID$_$Number$.m4s" -dash_segment_type mp4 -strftime 1 output/manifest.mpd -ss 0 -frames:v 1 -q:v 2 output/thumbnail.jpg
+
+
+
+Dash Maximum Optimization
+
+
+ffmpeg -i GH010549.MP4 -filter_complex "[0:v]split=7[v144p][v240p][v360p][v480p][v720p][v1080p][v4k]; [v144p]scale=256:144[v144p_out]; [v240p]scale=426:240[v240p_out]; [v360p]scale=640:360[v360p_out]; [v480p]scale=854:480[v480p_out]; [v720p]scale=1280:720[v720p_out]; [v1080p]scale=1920:1080[v1080p_out]; [v4k]scale=3840:2160[v4k_out]" -map "[v144p_out]" -map 0:a -c:v:0 libx264 -b:v:0 300k -preset fast -g 30 -sc_threshold 0 -c:a aac -b:a 64k -ac 2 -map "[v240p_out]" -map 0:a -c:v:1 libx264 -b:v:1 500k -preset fast -g 30 -sc_threshold 0 -c:a aac -b:a 64k -ac 2 -map "[v360p_out]" -map 0:a -c:v:2 libx264 -b:v:2 800k -preset fast -g 30 -sc_threshold 0 -c:a aac -b:a 96k -ac 2 -map "[v480p_out]" -map 0:a -c:v:3 libx264 -b:v:3 1000k -preset fast -g 30 -sc_threshold 0 -c:a aac -b:a 128k -ac 2 -map "[v720p_out]" -map 0:a -c:v:4 libx264 -b:v:4 2500k -preset fast -g 30 -sc_threshold 0 -c:a aac -b:a 128k -ac 2 -map "[v1080p_out]" -map 0:a -c:v:5 libx264 -b:v:5 5000k -preset fast -g 30 -sc_threshold 0 -c:a aac -b:a 128k -ac 2 -map "[v4k_out]" -map 0:a -c:v:6 libx264 -b:v:6 10000k -preset fast -g 30 -sc_threshold 0 -c:a aac -b:a 128k -ac 2 -f dash -seg_duration 10 -window_size 5 -extra_window_size 5 -use_template 1 -use_timeline 1 -adaptation_sets "id=0,streams=v id=1,streams=a" -init_seg_name "init_$RepresentationID$.m4s" -media_seg_name "chunk_$RepresentationID$_$Number$.m4s" -dash_segment_type mp4 -strftime 1 output/manifest.mpd -ss 00:00:00 -frames:v 1 -q:v 2 output/thumbnail.jpg
+
+
+
+OUPUT DASH
+
+
+
+ffmpeg -i GH010549.MP4 -filter_complex "[0:v]split=7[v144p][v240p][v360p][v480p][v720p][v1080p][v4k]; [v144p]scale=256:144[v144p_out]; [v240p]scale=426:240[v240p_out]; [v360p]scale=640:360[v360p_out]; [v480p]scale=854:480[v480p_out]; [v720p]scale=1280:720[v720p_out]; [v1080p]scale=1920:1080[v1080p_out]; [v4k]scale=3840:2160[v4k_out]" -map "[v144p_out]" -map 0:a -c:v:0 libx264 -b:v:0 300k -preset fast -g 30 -sc_threshold 0 -c:a aac -b:a 64k -ac 2 -map "[v240p_out]" -map 0:a -c:v:1 libx264 -b:v:1 500k -preset fast -g 30 -sc_threshold 0 -c:a aac -b:a 64k -ac 2 -map "[v360p_out]" -map 0:a -c:v:2 libx264 -b:v:2 800k -preset fast -g 30 -sc_threshold 0 -c:a aac -b:a 96k -ac 2 -map "[v480p_out]" -map 0:a -c:v:3 libx264 -b:v:3 1000k -preset fast -g 30 -sc_threshold 0 -c:a aac -b:a 128k -ac 2 -map "[v720p_out]" -map 0:a -c:v:4 libx264 -b:v:4 2500k -preset fast -g 30 -sc_threshold 0 -c:a aac -b:a 128k -ac 2 -map "[v1080p_out]" -map 0:a -c:v:5 libx264 -b:v:5 5000k -preset fast -g 30 -sc_threshold 0 -c:a aac -b:a 128k -ac 2 -map "[v4k_out]" -map 0:a -c:v:6 libx264 -b:v:6 10000k -preset fast -g 30 -sc_threshold 0 -c:a aac -b:a 128k -ac 2 -f dash -seg_duration 10 -window_size 5 -extra_window_size 5 -use_template 1 -use_timeline 1 -adaptation_sets "id=0,streams=v id=1,streams=a" -init_seg_name "output/init_$RepresentationID$.m4s" -media_seg_name "output/chunk_$RepresentationID$_$Number$.m4s" -dash_segment_type mp4 -strftime 1 output/manifest.mpd -ss 00:00:00 -frames:v 1 -q:v 2 output/thumbnail.jpg
+
+Video duration
+
+
+ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 GH010530.MP4
