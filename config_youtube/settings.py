@@ -16,13 +16,12 @@ ALLOWED_HOSTS = ['*']
 
 CORS_ALLOW_ALL_ORIGINS = True
 
-ASGI_APPLICATION = "config_youtube.asgi.application"
 
 # Application definition
 
 INSTALLED_APPS = [
     # prioritize Apps Third-party
-    'daphne',
+    # 'daphne',
 
     # common Apps
     'django.contrib.admin',
@@ -39,6 +38,8 @@ INSTALLED_APPS = [
     'djoser',
     'rest_framework_simplejwt.token_blacklist',
     'django_filters',
+    'django_elasticsearch_dsl',
+    'django_elasticsearch_dsl_drf',
     # Internal Apps
     'account',
     'channel',
@@ -74,7 +75,9 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'config_youtube.wsgi.application'
+ASGI_APPLICATION = "config_youtube.asgi.application"
+
+# WSGI_APPLICATION = 'config_youtube.wsgi.application'
 
 
 # Database
@@ -132,9 +135,9 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
 
     ),
-    'DEFAULT_PARSER_CLASSES': (
-        'api_v1.parsers.UJSONParser',
-    ),
+    # 'DEFAULT_PARSER_CLASSES': (
+    #     'api_v1.parsers.UJSONParser',
+    # ),
 }
 
 DJOSER = {
@@ -238,4 +241,13 @@ CHANNEL_LAYERS = {
             "host": "amqp://redowan:123456@localhost:5672/youtube",
         },
     },
+}
+
+
+# Elasticsearch
+ELASTICSEARCH_DSL={
+    'default': {
+        'hosts': 'http://localhost:9200',
+        # 'http_auth': ('elastic', 'QpJqqLpIHKwJqJy6Qvs7')
+    }
 }

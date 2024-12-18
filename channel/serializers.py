@@ -1,13 +1,18 @@
 from rest_framework import serializers
 from .models import Channel, Like, Dislike, Comment, Category, Content, VideoFile
 from account.serializers import UserMeSerializer
+from django.contrib.auth import get_user_model
 
 class UserChannelSerializer(serializers.ModelSerializer):
     admin = UserMeSerializer()
     associated_user = UserMeSerializer(many = True)
+    subscribers = serializers.SerializerMethodField()
     class Meta:
         model = Channel
-        fields = '__all__'
+        fields = ['channel_name', 'channel_slug', 'channel_picture', 'channel_banner', 'about', 'subscribers', 'total_views', 'website_url', 'created_at' , 'associated_user', 'admin', 'id']
+
+    def get_subscribers(self, obj):
+        return obj.subscriber.count()
 
 
 class ChannelSerializer(serializers.ModelSerializer):
@@ -32,7 +37,7 @@ class BasicChannelSerializer(serializers.ModelSerializer):
 class LikeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Like
-        fields = '__all__'
+        fields = ['user', 'content', 'created_at', 'id']
 
 
 class DislikeSerializer(serializers.ModelSerializer):
@@ -57,6 +62,10 @@ class VideoFileSerializer(serializers.ModelSerializer):
         model = VideoFile
         fields = ['file', 'user', 'channel', 'content']
 
+class SubscibersSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = get_user_model()
+        fields = ['get_full_name', 'First Name']
 
 
 class BasicContentSerializer(serializers.ModelSerializer):

@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, views
 from .models import Channel, Category, Comment, Like, Dislike, Content, VideoFile
-from .serializers import CategorySerializer, UserChannelSerializer, ChannelSerializer, ContentSerializer, BasicContentSerializer, VideoFileSerializer
+from .serializers import CategorySerializer, UserChannelSerializer, ChannelSerializer, ContentSerializer, BasicContentSerializer, VideoFileSerializer, LikeSerializer
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q
 from rest_framework_extensions.mixins import NestedViewSetMixin
@@ -12,7 +12,7 @@ from rest_framework import filters, status
 from rest_framework.parsers import FileUploadParser, MultiPartParser, FormParser
 from rest_framework.response import Response
 from .tasks import add
-
+import random
 
 class UserChannelView(NestedViewSetMixin, viewsets.ModelViewSet):
     queryset = Channel.objects
@@ -100,13 +100,13 @@ class HomeContentView(NestedViewSetMixin, viewsets.ModelViewSet):
                         default=False,
                         output_field=BooleanField()
                     )
-                ).order_by('-ViewedCat', 'is_viewed', '?').distinct()
+                ).order_by('-ViewedCat', 'is_viewed').distinct()
 
                 return related_content
             except Exception as e:
                 raise e
 
-        return self.queryset.all().order_by('?')
+        return self.queryset.all()
 
     def get_serializer_class(self):
         if self.action == 'retrieve':
@@ -118,13 +118,15 @@ class RelatedContentsView(NestedViewSetMixin, viewsets.ModelViewSet):
     queryset = Content.objects
     serializer_class = BasicContentSerializer
     http_method_names = ['get']
-
     def get_queryset(self):
         try:
             content = get_object_or_404(
                 Content, pk=self.kwargs.get('parent_lookup_pk'))
             rTags = content.tags.all().values_list('id', flat=True)
-            return self.queryset.filter(Q(category=content.category), Q(tags__id__in=rTags)).exclude(pk=content.pk).order_by('?')
+            uniqueContent = self.queryset.filter(Q(category=content.category), Q(tags__id__in=rTags)).exclude(pk=content.pk).distinct('pk')
+            uniqueContent = list(uniqueContent)
+            random.shuffle(uniqueContent)
+            return uniqueContent
         except Exception as e:
             return Response({'error': e})
 
@@ -207,6 +209,34 @@ class VideoUploadView(viewsets.ModelViewSet):
                 'message': f'Something Went Wrong',
                 'error': e
             })
+
+
+class LikesView(viewsets.ModelViewSet):
+    queryset = Like.objects.all()
+    serializer_class = LikeSerializer
+    permission_classes =[IsAuthenticated]
+    http_method_names = ['get', 'post', 'delete']
+
+    def create(self, request, *args, **kwargs):
+        try:
+            contentId = request.data.get('content')
+            userId = request.user.id
+            data = {
+                'content': contentId,
+                'user': userId,
+            }
+            serializer = self.serializer_class(data = data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({'status': status.HTTP_201_CREATED, 'message': 'Like added successfully'})
+            else:
+                return Response({'status': status.HTTP_406_NOT_ACCEPTABLE, 'message': 'Invalid data received'})
+        except Exception as e:
+            return Response({'status': status.HTTP_404_NOT_FOUND, 'message': 'Content ID is not found', 'error': e})
+
+    def get_queryset(self):
+        likes = self.queryset.filter(user = self.request.user).order_by('-created_at')
+        return likes
 
 
 # class FileUploadView(views.APIView):

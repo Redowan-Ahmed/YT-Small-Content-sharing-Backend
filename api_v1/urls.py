@@ -3,8 +3,9 @@ from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from rest_framework import routers
-from channel.views import UserChannelView, ChannelView, ContentView, HomeContentView, RelatedContentsView, CategoriesView, VideoUploadView
+from channel.views import UserChannelView, ChannelView, ContentView, HomeContentView, RelatedContentsView, CategoriesView, VideoUploadView, LikesView
 from rest_framework_extensions.routers import ExtendedDefaultRouter
+from search.views import BasicSearchView
 
 router = ExtendedDefaultRouter()
 
@@ -12,6 +13,8 @@ router.register('user-channels', UserChannelView, 'user-based-channels').registe
 router.register('channels', ChannelView, basename='channels').register('contents', ContentView, basename='channel-contents', parents_query_lookups=['channel_slug'])
 router.register('contents', HomeContentView, basename = 'home-content').register('related_contents', RelatedContentsView, basename='related-contents', parents_query_lookups=['pk'])
 router.register('categories', CategoriesView, basename = 'categories')
+router.register('likes', LikesView, basename = 'likes')
+router.register('search-basic', BasicSearchView, basename = 'search-basic')
 
 schema_view = get_schema_view(
     openapi.Info(

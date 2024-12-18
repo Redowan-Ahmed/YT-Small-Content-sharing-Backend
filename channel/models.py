@@ -10,6 +10,8 @@ import os
 from django.core.exceptions import PermissionDenied, ValidationError
 from .tasks import optimize_video
 import shutil
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 def channel_picture_upload_path(instance, filename):
     return f'channel_picture/{instance.pk}/{filename}'
@@ -78,8 +80,7 @@ class Category(BaseModel):
 
 
 class Like(BaseModel):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL,
-                             on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     content = models.ForeignKey(
         'Content', on_delete=models.CASCADE, related_name='likes')
 
@@ -91,8 +92,7 @@ class Like(BaseModel):
 
 
 class Dislike(BaseModel):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL,
-                             on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     content = models.ForeignKey(
         'Content', on_delete=models.CASCADE, related_name='dislikes')
 
@@ -104,8 +104,7 @@ class Dislike(BaseModel):
 
 
 class Comment(BaseModel):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL,
-                             on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     content = models.ForeignKey(
         'Content', on_delete=models.CASCADE, related_name='comments')
     comment = models.TextField(max_length=500, blank=False)
@@ -212,3 +211,11 @@ def delete_content_associated_instance(sender, instance, **kwargs):
 def optimizeVideo(sender, instance, created, **kwargs):
     if created:
         optimize_video.delay(str(instance.file), instance.channel.pk, instance.pk)
+
+
+@receiver(post_save, sender=Like)
+def realtimeLikes(sender, instance, created, **kwargs):
+    if created:
+        channel_layer = get_channel_layer()
+        contentLikes = Content.objects.prefetch_related('likes').get(pk = instance.content.pk).likes.all().count()
+        async_to_sync(channel_layer.group_send)(f"like_count_{instance.content.id}", {"type": "like.count", "likes": contentLikes, 'sent_from': f'{instance}_server_like_count'})

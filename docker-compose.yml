@@ -51,6 +51,14 @@ services:
       - redis:/var/lib/redis/data
       - ./redis.conf:/usr/local/etc/redis/redis.conf
 
+  elasticsearch:
+      image: elasticsearch:8.17.0
+      ports:
+        - 9200:9200
+        - 9300:9300
+      environment:
+        - discovery.type=single-node
+        - xpack.security.enabled=false
 volumes:
   local_pgdata:
   pgadmin-data:
