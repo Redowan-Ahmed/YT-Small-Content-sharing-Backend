@@ -21,7 +21,7 @@ class ContentDocument(Document):
 
     class Django:
         model = Content
-        fields = ['title', 'description', 'thumbnail', 'views_count', 'duration']
+        fields = ['title', 'description', 'thumbnail', 'views_count', 'duration', 'id', 'created_at', 'updated_at']
         related_models = [Category, Channel, Tag]
 
     def get_queryset(self):

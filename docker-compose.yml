@@ -38,8 +38,13 @@ services:
       - "4369:4369"
       - "5671:5671"
       - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: redowan
+      RABBITMQ_DEFAULT_PASS: 123456
+      RABBITMQ_DEFAULT_VHOST: youtube
     depends_on:
       - pgdb
+    restart: always
 
   redis:
     image: redis:latest
